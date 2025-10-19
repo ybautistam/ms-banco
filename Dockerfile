@@ -14,8 +14,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 2) Copia solo el código de tu servicio (según tu árbol de carpetas)
 COPY . . 
 
-
-CMD ["uvicorn", "main.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
-
-#para railway
+#para railway y exponer el puerto 
 CMD ["sh", "-c", "uvicorn main.app:app --host 0.0.0.0 --port ${PORT:-8000}"]

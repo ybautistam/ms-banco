@@ -10,6 +10,7 @@ venv/
 *.pyo
 *.pyd
 .pytest_cache/
+node_modules/ 
 
 # IDE
 .vscode/
