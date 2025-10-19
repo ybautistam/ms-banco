@@ -1,0 +1,52 @@
+
+services:
+  db:
+    image: postgres:16
+    container_name: bancos_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5436:${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bancos_api
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8003:8000"
+    environment:
+      - POSTGRES_URL=${POSTGRES_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALG=${JWT_ALG}
+      - JWT_AUD=${JWT_AUD}
+      - JWT_ISS=${JWT_ISS}
+      - INVENTORY_URL=${INVENTORY_URL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+    healthcheck:
+
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').getcode()==200 else 1)\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+
+  db_data:

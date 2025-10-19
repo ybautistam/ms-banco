@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.sqlite3
+
+
+*.pyo
+*.pyd
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log
+db_data/
+docker-compose.override.yml
+
+
+alembic.ini
+alembic/versions/__pycache__/
