@@ -256,7 +256,8 @@ FROM bancos.facturas_compra f
 JOIN bancos.proveedores p ON p.proveedor_id = f.proveedor_id
 WHERE f.estado IN ('PENDIENTE','PARCIAL');
 
--- Resumen por moneda (útil si manejas GTQ/USD)
+-- Resumen por moneda 
+
 CREATE OR REPLACE VIEW bancos.vw_cxp_resumen_moneda AS
 SELECT tm.codigo AS moneda,
        SUM(f.saldo_pendiente)::NUMERIC(18,2) AS total_pendiente
