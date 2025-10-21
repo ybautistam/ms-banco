@@ -16,11 +16,19 @@ def crear_banco(session: Session, nombre: str, direccion: str | None, telefono: 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Error al crear banco: {str(e)}')
 
-def listar_bancos(session: Session) -> list[dict]:
-    
-    rows = session.exec(select(Banco).where(Banco.activo == True).order_by(Banco.nombre_banco)).all()
-    return [r.dict() for r in rows]
-    
+def listar_bancos(session: Session,estado: str = "ACTIVO") -> dict:
+    '''listar bancos con filtro de activo o inactivo '''
+    try: 
+        q = select(Banco)
+        if estado == "ACTIVO":
+            q = q.where(Banco.activo == True)
+        elif estado == "INACTIVO": 
+            q = q.where(Banco.activo == False)
+        rows = session.exec(q.order_by(Banco.nombre_banco)).all()
+        return {"items" : [r.dict() for r in rows]}
+    except Exception as e: 
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error al listar bancos: {str(e)}")
+          
 
 def crear_cuenta(session: Session, id_banco: int, id_tipo_cuenta: int, id_tipo_moneda: int,
                  numero: str, titular: str) -> int:

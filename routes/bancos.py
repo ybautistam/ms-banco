@@ -1,7 +1,7 @@
 from fastapi import APIRouter,Depends, HTTPException, status
 from sqlmodel import Session,select
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Literal
 from connection.data.db import get_session
 from connection.models.modelos import(MovimientoCreate, TransferenciaCreate, PagoProveedorCreate,BancoCreate,CuentaCreate,TipoMoneda,Banco,TipoCuenta,CuentaBancaria,AuthUsuario)
 from function.fbancos import(crear_movimiento, transferencia_interna, obtener_saldo,pago_a_proveedor,facturas_abiertas_por_proveedor)
@@ -22,9 +22,29 @@ def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
     banco_id = crear_banco(session, dto.nombre_banco, dto.direccion, dto.telefono)
     return {"id_banco": banco_id}
 
+
 @banco.get("/", dependencies=[Depends(require_scopes("Administrador"))])
-def api_listar_bancos(session: Session = Depends(get_session)):
-    return {"items": listar_bancos(session)}
+def api_listar_bancos(estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO",session: Session = Depends(get_session)):
+    
+    return listar_bancos(session,estado)
+
+    
+#----- agregacion de funcion cambiar estado banco -------
+@banco.patch("/{id_banco}/estado", dependencies=[Depends(require_scopes("Administrador"))])
+def api_cambiar_estado_banco(
+    id_banco: int,
+    nuevo_estado: Literal["ACTIVO", "INACTIVO"],
+    session: Session = Depends(get_session),
+):
+    b = session.get(Banco, id_banco)
+    if not b:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Banco no existe")
+
+    b.activo = (nuevo_estado == "ACTIVO")
+    session.add(b); session.commit(); session.refresh(b)
+    return {"ok": True, "estado": "ACTIVO" if b.activo else "INACTIVO"}
+    
+#----------------------------------------------------------
 
 @banco.post("/cuentas", status_code=201, dependencies=[Depends(require_scopes("Administrador"))])
 def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session)):
