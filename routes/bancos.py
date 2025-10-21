@@ -17,16 +17,16 @@ banco = APIRouter(
         tags=["bancos"] 
     )
 
-@banco.post("/", status_code=201, dependencies=[Depends(require_scopes("admin"))])
+@banco.post("/", status_code=201, dependencies=[Depends(require_scopes("Administrador"))])
 def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
     banco_id = crear_banco(session, dto.nombre_banco, dto.direccion, dto.telefono)
     return {"id_banco": banco_id}
 
-@banco.get("/", dependencies=[Depends(require_scopes("admin"))])
+@banco.get("/", dependencies=[Depends(require_scopes("Administrador"))])
 def api_listar_bancos(session: Session = Depends(get_session)):
     return {"items": listar_bancos(session)}
 
-@banco.post("/cuentas", status_code=201, dependencies=[Depends(require_scopes("admin"))])
+@banco.post("/cuentas", status_code=201, dependencies=[Depends(require_scopes("Administrador"))])
 def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session)):
     
     if not session.get(Banco, dto.id_banco):
@@ -46,7 +46,7 @@ def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session))
     )
     return {"id_cuenta_bancaria": cuenta_id}
 
-@banco.get("/listcuentas", dependencies=[Depends(require_scopes("admin"))])
+@banco.get("/listcuentas", dependencies=[Depends(require_scopes("Administrador"))])
 def api_listar_cuentas(
     banco_id: Optional[int] = None,
     moneda_id: Optional[int] = None,
@@ -64,7 +64,7 @@ def api_listar_cuentas(
     rows = session.exec(q.order_by(CuentaBancaria.id_cuenta_bancaria.desc())).all()
     return {"items": [r.dict() for r in rows]}
 
-@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[Depends(require_scopes("admin"))])
+@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[Depends(require_scopes("Administrador"))])
 def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Session = Depends(get_session)):
     if nuevo_estado not in ("ACTIVA","INACTIVA","CERRADA"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Estado inválido")
@@ -76,7 +76,7 @@ def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Sessio
     return {"ok": True, "estado": c.estado}
 
 #----------------------------------- saldo,movimiento trasferencias  ---------------------------------#
-@banco.get("/saldos/{id_cuenta}",dependencies=[Depends(require_scopes("admin"))])
+@banco.get("/saldos/{id_cuenta}",dependencies=[Depends(require_scopes("Administrador"))])
 def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> Decimal:
     """
     Obtener el saldo actual de una cuenta bancaria.
@@ -85,7 +85,7 @@ def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> 
     return {"id_cuenta": id_cuenta, "saldo": str(saldo)}
     
 @banco.post("/movimientos", status_code=status.HTTP_201_CREATED)
-def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_session), usuario: AuthUsuario = Depends(require_scopes("admin")),)-> dict:
+def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_session), usuario: AuthUsuario = Depends(require_scopes("Administrador")),)-> dict:
     """
     Crear un movimiento bancario (depósito, retiro, transferencia, cheque).
     """
@@ -94,7 +94,7 @@ def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_
     return {"id_movimiento": id_mov, "detalle": str(mov)}
 
 @banco.post("/transferencias", status_code=status.HTTP_201_CREATED)
-def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(require_scopes("admin")),):
+def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(require_scopes("Administrador")),):
     """
     Realizar una transferencia interna entre dos cuentas bancarias.
     """
@@ -103,7 +103,7 @@ def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(ge
     return {"id_transferencia": id_trans, "detalle": trans}
 
 @banco.post("/pagos_proveedor", status_code=status.HTTP_201_CREATED)
-def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(require_scopes("admin")),)-> dict:
+def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(require_scopes("Administrador")),)-> dict:
     """
     Registrar un pago a un proveedor, asociado opcionalmente a una factura.
     """
@@ -111,7 +111,7 @@ def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(g
     id_pago = pago_a_proveedor(session, pago,usuario=user_id)
     return {"id_pago": id_pago, "detalle": pago}
 
-@banco.get("/proveedor/{proveedor_id}/factura_abiertas",dependencies=[Depends(require_scopes("admin"))])
+@banco.get("/proveedor/{proveedor_id}/factura_abiertas",dependencies=[Depends(require_scopes("Administrador"))])
 def obtener_facturas_abiertas(proveedor_id:int, limite:int=20, session:Session=Depends(get_session))-> list:
     """
     Obtener una lista de facturas abiertas (pendientes o parciales) para ver a que proveedor le debemos .
