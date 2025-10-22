@@ -4,6 +4,8 @@ from typing import Any
 import jwt, os
 from connection.data.db import settings
 from connection.models.modelos import AuthUsuario
+import logging
+log = logging.getLogger("bancos.auth")
 
 def _get_secret_and_alg():
     # Prioriza JWT_SECRET (que es lo que tienes en Railway). Si no, intenta JWT_KEY.
@@ -42,20 +44,26 @@ def _decode_jwt(token: str) -> dict[str, Any]:
 def get_current_user(request: Request) -> AuthUsuario:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
+        log.warning("Auth: Falta token")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Falta token")
 
     token = auth.split(" ", 1)[1]
-    payload = _decode_jwt(token)
+    try:
+        payload = _decode_jwt(token)
+    except jwt.ExpiredSignatureError as e:
+        log.warning("Auth: Token expirado: %s", e)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token expirado")
+    except jwt.InvalidTokenError as e:
+        log.warning("Auth: Token inválido: %s", e)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
 
     scopes = payload.get("roles") or payload.get("scopes") or []
     if not isinstance(scopes, list):
         scopes = []
 
-    return AuthUsuario(
-        sub=payload.get("sub"),
-        email=payload.get("email"),
-        scopes=scopes,
-    )
+    user = AuthUsuario(sub=payload.get("sub"), email=payload.get("email"), scopes=scopes)
+    log.info("Auth OK sub=%s roles=%s", user.sub, scopes)
+    return user
 
 def require_scopes(*needed: str):
     def _dep(user: AuthUsuario = Depends(get_current_user)) -> AuthUsuario:
