@@ -16,7 +16,7 @@ def crear_banco(session: Session, nombre: str, direccion: str | None, telefono: 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Error al crear banco: {str(e)}')
 
-def listar_bancos(session: Session,estado: str = "ACTIVO") -> dict:
+def listar_bancos(session: Session,estado: str = "ACTIVO") -> list[dict]:
     '''listar bancos con filtro de activo o inactivo '''
     try: 
         q = select(Banco)

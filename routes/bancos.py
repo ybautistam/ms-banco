@@ -27,8 +27,9 @@ def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
 
 @banco.get("/", dependencies=[])
 def api_listar_bancos(estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO",session: Session = Depends(get_session)):
+    data  = listar_bancos(session,estado)
     
-    return listar_bancos(session,estado)
+    return {"items" : data}
 
     
 #----- agregacion de funcion cambiar estado banco -------
