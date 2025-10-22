@@ -54,7 +54,7 @@ class Banco(SQLModel, table=True):
     telefono: Optional[str] = Field(default=None, max_length=8)
     activo: bool = Field(default=True)
 
-    cuentas: List["CuentaBancaria"] = Relationship(back_populates="banco")
+    cuentas: list["CuentaBancaria"] = Relationship(back_populates="banco")
 
 class TipoCuenta(SQLModel, table=True):
     __tablename__ = "tipos_cuenta"
@@ -85,7 +85,7 @@ class CuentaBancaria(SQLModel, table=True):
     estado: str = Field(default="ACTIVA", max_length=12)
     fecha_apertura: date = Field(default_factory=date.today)
 
-    banco: Optional[Banco] = Relationship(back_populates="cuentas")
+    banco: "Banco" = Relationship(back_populates="cuentas")
     movimientos: List["MovimientoBancario"] = Relationship(back_populates="cuenta")
 
 # ---------- Movimientos ----------
