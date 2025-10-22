@@ -1,9 +1,7 @@
-
+from sqlmodel import SQLModel, Field,Relationship
 from typing import Optional, List,Literal
 from datetime import date, datetime
 from decimal import Decimal
-from sqlalchemy.orm import Mapped, relationship 
-from sqlmodel import SQLModel, Field
 from sqlalchemy import UniqueConstraint, Index, Column
 from sqlalchemy.dialects.postgresql import UUID as SAUUID, ENUM as PGEnum
 from sqlalchemy import Numeric, Boolean, text
@@ -65,8 +63,8 @@ class Banco(SQLModel, table=True):
     telefono: Optional[str] = Field(default=None, max_length=8)
     activo: bool = Field(default=True)
 
-    #cuentas: list["CuentaBancaria"] = Relationship(back_populates="banco")
-    cuentas: Mapped[List["CuentaBancaria"]] = relationship(back_populates="banco")
+    cuentas: list["CuentaBancaria"] = Relationship(back_populates="banco")
+    
 
 class TipoCuenta(SQLModel, table=True):
     __tablename__ = "tipos_cuenta"
@@ -97,11 +95,9 @@ class CuentaBancaria(SQLModel, table=True):
     estado: str = Field(default="ACTIVA", max_length=12)
     fecha_apertura: date = Field(default_factory=date.today)
 
-    #banco: "Banco" = Relationship(back_populates="cuentas")
-    #movimientos: list["MovimientoBancario"] = Relationship(back_populates="cuenta")
-    banco: Mapped["Banco"] = relationship(back_populates="cuentas")                         
-    movimientos: Mapped[List["MovimientoBancario"]] = relationship(back_populates="cuenta") 
-
+    banco: "Banco" = Relationship(back_populates="cuentas")
+    movimientos: list["MovimientoBancario"] = Relationship(back_populates="cuenta")
+    
 # ---------- Movimientos ----------
 class MovimientoBancario(SQLModel, table=True):
     __tablename__ = "movimientos_bancarios"
@@ -124,11 +120,8 @@ class MovimientoBancario(SQLModel, table=True):
         sa_column=Column(Boolean, nullable=False, server_default=text("false"))
     )
 
-    #cuenta: "CuentaBancaria" = Relationship(back_populates="movimientos")
-    cuenta: Mapped["CuentaBancaria"] = relationship(back_populates="movimientos")
-
-
-
+    cuenta: "CuentaBancaria" = Relationship(back_populates="movimientos")
+    
 
 # ---------- Cheques ----------
 class TipoCheque(SQLModel, table=True):
@@ -177,8 +170,8 @@ class Proveedor(SQLModel, table=True):
     correo: Optional[str] = Field(default=None, max_length=120)
     activo: bool = Field(default=True)
 
-    #facturas: list["FacturaCompra"] = Relationship(back_populates="proveedor")
-    facturas: Mapped[List["FacturaCompra"]] = relationship(back_populates="proveedor")
+    facturas: list["FacturaCompra"] = Relationship(back_populates="proveedor")
+    
     
 class FacturaCompra(SQLModel, table=True):
     __tablename__ = "facturas_compra"
@@ -198,8 +191,8 @@ class FacturaCompra(SQLModel, table=True):
     #estado: str = Field(sa_column=EstadoFacturaCol)
     estado: EstadoFactura = Field(sa_column=EstadoFacturaCol)
 
-    #proveedor: "Proveedor" = Relationship(back_populates="facturas")
-    proveedor: Mapped["Proveedor"] = relationship(back_populates="facturas")
+    proveedor: "Proveedor" = Relationship(back_populates="facturas")
+    
 
 class PagoProveedor(SQLModel, table=True):
     __tablename__ = "pagos_proveedor"
