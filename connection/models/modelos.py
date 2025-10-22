@@ -86,7 +86,7 @@ class CuentaBancaria(SQLModel, table=True):
     fecha_apertura: date = Field(default_factory=date.today)
 
     banco: "Banco" = Relationship(back_populates="cuentas")
-    movimientos: List["MovimientoBancario"] = Relationship(back_populates="cuenta")
+    movimientos: list["MovimientoBancario"] = Relationship(back_populates="cuenta")
 
 # ---------- Movimientos ----------
 class MovimientoBancario(SQLModel, table=True):
@@ -109,7 +109,7 @@ class MovimientoBancario(SQLModel, table=True):
         sa_column=Column(Boolean, nullable=False, server_default=text("false"))
     )
 
-    cuenta: Optional[CuentaBancaria] = Relationship(back_populates="movimientos")
+    cuenta: "CuentaBancaria" = Relationship(back_populates="movimientos")
 
 
 
@@ -161,7 +161,7 @@ class Proveedor(SQLModel, table=True):
     correo: Optional[str] = Field(default=None, max_length=120)
     activo: bool = Field(default=True)
 
-    facturas: List["FacturaCompra"] = Relationship(back_populates="proveedor")
+    facturas: list["FacturaCompra"] = Relationship(back_populates="proveedor")
     
 class FacturaCompra(SQLModel, table=True):
     __tablename__ = "facturas_compra"
@@ -179,7 +179,7 @@ class FacturaCompra(SQLModel, table=True):
     saldo_pendiente: Dinero = Field(sa_column=Column(Numeric(18,2)))
     estado: str = Field(sa_column=EstadoFacturaCol)
 
-    proveedor: Optional[Proveedor] = Relationship(back_populates="facturas")
+    proveedor: "Proveedor" = Relationship(back_populates="facturas")
 
 class PagoProveedor(SQLModel, table=True):
     __tablename__ = "pagos_proveedor"
