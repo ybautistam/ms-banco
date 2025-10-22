@@ -8,7 +8,9 @@ from routes.bancos import banco
 from routes.reportes import reportes
 from routes.conciliaziones import conc
 from routes.cheques import cheques
+
 app = FastAPI(title="bancos Api")
+app.router.redirect_slashes = False
 
 DEBUG = os.getenv("DEBUG", "0") == "1"
 origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
