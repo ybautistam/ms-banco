@@ -39,14 +39,23 @@ docker compose logs -f api
 app = FastAPI(title="bancos Api")
 
 
-origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins or ["*"],
+    allow_origins=[o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()] or ["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Authorization",
+        "X-Refresh-Token",
+        "Content-Type",
+        "Accept",
+    ],
+    expose_headers=[
+        "X-New-Access-Token",
+        "X-New-Refresh-Token",
+        "X-New-Access-Expires-In",
+    ],
 )
 
 logger = logging.getLogger("bancos")
