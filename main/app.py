@@ -9,48 +9,24 @@ from routes.conciliaziones import conc
 from routes.cheques import cheques
 
 
-
-
-
-#docker compose logs -f api   
-#python -c "import sqlmodel, sys; print(sqlmodel.__version__, sys.executable)"
-
-#docker compose ps      # verifica que ventas_api esté "Up"
-#docker compose up -d   # si no está arriba, levántalo
-
-""" 
-# para esta sesión, desactiva buildkit
-$env:DOCKER_BUILDKIT=0
-
-# limpia builder cache (opcional pero ayuda)
-docker buildx prune -af
-
-# si no te importa borrar imágenes/volúmenes huérfanos (recomendado en dev)
-docker system prune -af --volumes
-
-docker compose build --no-cache
-docker compose up -d
-
-docker compose up -d --build
-
-docker compose logs -f api
-"""
-
 app = FastAPI(title="bancos Api")
 
-
+origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+if not origins:
+    origins = ["http://localhost:5173"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()] or ["http://localhost:5173"],
+    allow_origins=origins,  
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=[
         "Authorization",
         "X-Refresh-Token",
         "Content-Type",
         "Accept",
     ],
+  
     expose_headers=[
         "X-New-Access-Token",
         "X-New-Refresh-Token",
