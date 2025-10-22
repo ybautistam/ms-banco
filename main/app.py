@@ -19,19 +19,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=[
-        "Authorization",
-        "X-Refresh-Token",
-        "Content-Type",
-        "Accept",
-    ],
+    allow_methods=['*'],
+    allow_headers=['*'],
   
-    expose_headers=[
-        "X-New-Access-Token",
-        "X-New-Refresh-Token",
-        "X-New-Access-Expires-In",
-    ],
+    expose_headers=["X-New-Access-Token", "X-New-Access-Expires-In","X-New-Refresh-Token"],
 )
 
 logger = logging.getLogger("bancos")
