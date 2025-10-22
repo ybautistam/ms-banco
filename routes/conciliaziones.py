@@ -17,7 +17,7 @@ conc = APIRouter(
         tags=["conciliaciones"] 
     )
 
-@conc.post("/",status_code=status.HTTP_201_CREATED,dependencies=[Depends(require_scopes("admin"))],)
+@conc.post("/",status_code=status.HTTP_201_CREATED,dependencies=[],)
 def crear_conc(dto: ConciliacionCreate,session: Session = Depends(get_session),):
     """
     Crea una conciliación:
@@ -48,7 +48,7 @@ def crear_conc(dto: ConciliacionCreate,session: Session = Depends(get_session),)
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, f"Error al conciliar: {e}")
 
 
-@conc.get("",dependencies=[Depends(require_scopes("admin"))],)
+@conc.get("",dependencies=[],)
 def listar_conc(id_cuenta_bancaria: int,desde: Optional[date] = None,hasta: Optional[date] = None,limit: int = 100,session: Session = Depends(get_session),):
     
     """
@@ -59,7 +59,7 @@ def listar_conc(id_cuenta_bancaria: int,desde: Optional[date] = None,hasta: Opti
     return {"items": items}
 
 
-@conc.get("/partidas-pendientes",dependencies=[Depends(require_scopes("admin"))],)
+@conc.get("/partidas-pendientes",dependencies=[],)
 def listar_partidas(id_cuenta_bancaria: int,hasta: date,session: Session = Depends(get_session),
 ):
     """

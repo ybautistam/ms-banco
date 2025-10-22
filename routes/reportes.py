@@ -16,7 +16,7 @@ reportes = APIRouter(
     )
 
 
-@reportes.get("/historial_pagos",dependencies=[Depends(require_scopes("admin"))])
+@reportes.get("/historial_pagos",dependencies=[])
 def obtener_historial_pagos(proveedor_id: Optional[int] = None, fecha_inicio: Optional[date] = None, fecha_fin: Optional[date] = None, limite: int = 100, session: Session = Depends(get_session)):
     """
     Obtener el historial de pagos realizados a proveedores
@@ -24,7 +24,7 @@ def obtener_historial_pagos(proveedor_id: Optional[int] = None, fecha_inicio: Op
     pagos = historial_pagos(session, proveedor_id, fecha_inicio, fecha_fin, limite)
     return {"historial_pagos": pagos}
 
-@reportes.get("/facturas_pagadas",dependencies=[Depends(require_scopes("admin"))])
+@reportes.get("/facturas_pagadas",dependencies=[])
 def obtener_facturas_pagadas(proveedor_id: Optional[int] = None, fecha_inicio: Optional[date] = None, fecha_fin: Optional[date] = None, limite: int = 100, session: Session = Depends(get_session)):
     """
     Obtener una lista de facturas pagadas por proveedores en un rango de fechas.

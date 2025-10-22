@@ -17,20 +17,22 @@ banco = APIRouter(
         tags=["bancos"] 
     )
 
-@banco.post("/", status_code=201, dependencies=[Depends(require_scopes("Administrador"))])
+#dependencies=[Depends(require_scopes("Administrador"))]
+
+@banco.post("/", status_code=201, dependencies=[])
 def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
     banco_id = crear_banco(session, dto.nombre_banco, dto.direccion, dto.telefono)
     return {"id_banco": banco_id}
 
 
-@banco.get("/", dependencies=[Depends(require_scopes("Administrador"))])
+@banco.get("/", dependencies=[])
 def api_listar_bancos(estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO",session: Session = Depends(get_session)):
     
     return listar_bancos(session,estado)
 
     
 #----- agregacion de funcion cambiar estado banco -------
-@banco.patch("/{id_banco}/estado", dependencies=[Depends(require_scopes("Administrador"))])
+@banco.patch("/{id_banco}/estado", dependencies=[])
 def api_cambiar_estado_banco(
     id_banco: int,
     nuevo_estado: Literal["ACTIVO", "INACTIVO"],
@@ -46,7 +48,7 @@ def api_cambiar_estado_banco(
     
 #----------------------------------------------------------
 
-@banco.post("/cuentas", status_code=201, dependencies=[Depends(require_scopes("Administrador"))])
+@banco.post("/cuentas", status_code=201, dependencies=[])
 def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session)):
     
     if not session.get(Banco, dto.id_banco):
@@ -66,7 +68,7 @@ def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session))
     )
     return {"id_cuenta_bancaria": cuenta_id}
 
-@banco.get("/listcuentas", dependencies=[Depends(require_scopes("Administrador"))])
+@banco.get("/listcuentas", dependencies=[])
 def api_listar_cuentas(
     banco_id: Optional[int] = None,
     moneda_id: Optional[int] = None,
@@ -84,7 +86,7 @@ def api_listar_cuentas(
     rows = session.exec(q.order_by(CuentaBancaria.id_cuenta_bancaria.desc())).all()
     return {"items": [r.dict() for r in rows]}
 
-@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[Depends(require_scopes("Administrador"))])
+@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[])
 def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Session = Depends(get_session)):
     if nuevo_estado not in ("ACTIVA","INACTIVA","CERRADA"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Estado inválido")
@@ -96,7 +98,7 @@ def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Sessio
     return {"ok": True, "estado": c.estado}
 
 #----------------------------------- saldo,movimiento trasferencias  ---------------------------------#
-@banco.get("/saldos/{id_cuenta}",dependencies=[Depends(require_scopes("Administrador"))])
+@banco.get("/saldos/{id_cuenta}",dependencies=[])
 def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> Decimal:
     """
     Obtener el saldo actual de una cuenta bancaria.

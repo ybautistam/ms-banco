@@ -15,7 +15,7 @@ cheques = APIRouter(
         tags=["cheques"] 
     )
 
-@cheques.post("/emitir", status_code=201, dependencies=[Depends(require_scopes("admin"))])
+@cheques.post("/emitir", status_code=201, dependencies=[])
 def api_emitir(dto: EmitirCheque, session: Session = Depends(get_session)):
     try:
     
@@ -25,7 +25,7 @@ def api_emitir(dto: EmitirCheque, session: Session = Depends(get_session)):
     except Exception as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
 
-@cheques.post("/{id_cheque}/anular", status_code=204, dependencies=[Depends(require_scopes("admin"))])
+@cheques.post("/{id_cheque}/anular", status_code=204, dependencies=[])
 def api_anular(id_cheque: int, dto: AnularCheque, session: Session = Depends(get_session)):
     try: 
         
@@ -34,7 +34,7 @@ def api_anular(id_cheque: int, dto: AnularCheque, session: Session = Depends(get
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
     
 
-@cheques.get("/listar", dependencies=[Depends(require_scopes("admin"))])
+@cheques.get("/listar", dependencies=[])
 def listar_cheques(cuenta_id: int | None = None, estado: str | None = None, session: Session = Depends(get_session)):
      
     sql = "SELECT * FROM bancos.cheques WHERE 1=1"
