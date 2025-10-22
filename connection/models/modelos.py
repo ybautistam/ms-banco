@@ -3,7 +3,7 @@ from typing import Optional, List,Literal
 from datetime import date, datetime
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, relationship 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field
 from sqlalchemy import UniqueConstraint, Index, Column
 from sqlalchemy.dialects.postgresql import UUID as SAUUID, ENUM as PGEnum
 from sqlalchemy import Numeric, Boolean, text
@@ -38,6 +38,17 @@ FormaPagoCol = Column(PGEnum(
     "TRANSFERENCIA","DEPOSITO","CHEQUE",
     name="forma_pago", schema=SCHEMA, create_type=False
 ))
+
+#----------agregacion de nuevo modelo -------
+class TipoMov(str, Enum):
+    DEPOSITO = "DEPOSITO"
+    RETIRO = "RETIRO"
+    TRANSFERENCIA_IN = "TRANSFERENCIA_IN"
+    TRANSFERENCIA_OUT = "TRANSFERENCIA_OUT"
+    CHEQUE_EMITIDO = "CHEQUE_EMITIDO"
+    CHEQUE_COBRADO = "CHEQUE_COBRADO"
+
+#--------------------------------------
 
 Dinero = Decimal 
 
@@ -99,7 +110,8 @@ class MovimientoBancario(SQLModel, table=True):
     id_cuenta_bancaria: int = Field(foreign_key=f"{SCHEMA}.cuentas_bancarias.id_cuenta_bancaria")
     fecha: datetime = Field(default_factory=datetime.utcnow)
    
-    tipo_mov: str = Field(sa_column=TipoMovCol)
+    #tipo_mov: str = Field(sa_column=TipoMovCol)
+    tipo_mov: TipoMov = Field(sa_column=TipoMovCol)
     monto: Dinero = Field(sa_column=Column(Numeric(18, 2)))
     referencia: Optional[str] = Field(default=None, max_length=60)
     descripcion: Optional[str] = Field(default=None, max_length=250)
@@ -182,7 +194,9 @@ class FacturaCompra(SQLModel, table=True):
     moneda_id: int = Field(foreign_key=f"{SCHEMA}.tipos_moneda.id_tipo_moneda")
     monto_total: Dinero = Field(sa_column=Column(Numeric(18,2)))
     saldo_pendiente: Dinero = Field(sa_column=Column(Numeric(18,2)))
-    estado: str = Field(sa_column=EstadoFacturaCol)
+    
+    #estado: str = Field(sa_column=EstadoFacturaCol)
+    estado: EstadoFactura = Field(sa_column=EstadoFacturaCol)
 
     #proveedor: "Proveedor" = Relationship(back_populates="facturas")
     proveedor: Mapped["Proveedor"] = relationship(back_populates="facturas")
@@ -196,7 +210,10 @@ class PagoProveedor(SQLModel, table=True):
     id_cuenta_bancaria: int = Field(foreign_key=f"{SCHEMA}.cuentas_bancarias.id_cuenta_bancaria")
     fecha_pago: datetime = Field(default_factory=datetime.utcnow)
     monto_pagado: Dinero = Field(sa_column=Column(Numeric(18,2)))
-    forma: str = Field(sa_column=FormaPagoCol)
+    
+    #forma: str = Field(sa_column=FormaPagoCol)
+    forma: FormaPago = Field(sa_column=FormaPagoCol)
+    
     referencia_banco: Optional[str] = Field(default=None, max_length=60)
     observacion: Optional[str] = Field(default=None, max_length=250)
     
