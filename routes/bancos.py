@@ -5,7 +5,7 @@ from typing import Optional, Literal
 from connection.data.db import get_session
 from connection.models.modelos import(MovimientoCreate, TransferenciaCreate, PagoProveedorCreate,BancoCreate,CuentaCreate,TipoMoneda,Banco,TipoCuenta,CuentaBancaria,AuthUsuario)
 from function.fbancos import(crear_movimiento, transferencia_interna, obtener_saldo,pago_a_proveedor,facturas_abiertas_por_proveedor)
-from function.fbanco_cuentas import listar_bancos,crear_banco,crear_cuenta
+from function.fbanco_cuentas import listar_bancos,crear_banco,crear_cuenta,mostrar_catalogo
 from services.seguridad_cliente import require_scopes
 
 banco = APIRouter(
@@ -48,6 +48,11 @@ def api_cambiar_estado_banco(
     return {"ok": True, "estado": "ACTIVO" if b.activo else "INACTIVO"}
     
 #----------------------------------------------------------
+
+#---------------------cargar catalogos de bancos , moneda y tipo  ------------------
+@banco.get("/catalogos", dependencies=[])
+def catalogos(session: Session = Depends(get_session)):
+    return mostrar_catalogo(session)
 
 @banco.post("/cuentas", status_code=201, dependencies=[])
 def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session)):

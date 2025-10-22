@@ -56,3 +56,34 @@ def crear_cuenta(session: Session, id_banco: int, id_tipo_cuenta: int, id_tipo_m
         session.rollback()
         
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El número de cuenta ya está registrado para este banco.") from e
+
+def mostrar_catalogo(session:Session): 
+    ''' obtener los bancos activos, tipos de cuenta y las monedas'''
+    
+    try: 
+        bancos = session.exec(
+            select(Banco.id_banco, Banco.nombre_banco)
+            .where(Banco.activo == True)
+            .order_by(Banco.nombre_banco)
+        ).all()
+
+        tipos = session.exec(
+            select(TipoCuenta.id_tipo_cuenta, TipoCuenta.descripcion)
+            .order_by(TipoCuenta.descripcion)
+        ).all()
+
+        monedas = session.exec(
+            select(TipoMoneda.id_tipo_moneda, TipoMoneda.codigo, TipoMoneda.descripcion)
+            .order_by(TipoMoneda.codigo)
+        ).all()
+        
+        return {
+            "bancos": [{"id": b[0],"nombre": b[1]} for b in bancos],
+            "tipos": [{"id": t[0],"nombre": t[1]} for t in tipos],
+            "monedas": [{"id": m[0], "codigo": m[1]} for m in monedas],
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al obtener catálogos: {str(e)}"
+        )
