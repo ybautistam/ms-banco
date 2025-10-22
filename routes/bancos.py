@@ -19,13 +19,13 @@ banco = APIRouter(
 
 #dependencies=[Depends(require_scopes("Administrador"))]
 
-@banco.post("/", status_code=201, dependencies=[])
+@banco.post("", status_code=201, dependencies=[])
 def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
     banco_id = crear_banco(session, dto.nombre_banco, dto.direccion, dto.telefono)
     return {"id_banco": banco_id}
 
 
-@banco.get("/", dependencies=[])
+@banco.get("", dependencies=[])
 def api_listar_bancos(estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO",session: Session = Depends(get_session)):
     data  = listar_bancos(session,estado)
     

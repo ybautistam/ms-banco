@@ -17,7 +17,7 @@ conc = APIRouter(
         tags=["conciliaciones"] 
     )
 
-@conc.post("/",status_code=status.HTTP_201_CREATED,dependencies=[],)
+@conc.post("",status_code=status.HTTP_201_CREATED,dependencies=[],)
 def crear_conc(dto: ConciliacionCreate,session: Session = Depends(get_session),):
     """
     Crea una conciliación:
