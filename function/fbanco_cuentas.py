@@ -25,7 +25,7 @@ def listar_bancos(session: Session,estado: str = "ACTIVO") -> list[dict]:
         elif estado == "INACTIVO": 
             q = q.where(Banco.activo == False)
         rows = session.exec(q.order_by(Banco.nombre_banco)).all()
-        return {"items" : [r.dict() for r in rows]}
+        return [r.dict() for r in rows]  
     except Exception as e: 
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Error al listar bancos: {str(e)}")
           
