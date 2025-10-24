@@ -54,7 +54,7 @@ def obtener_saldo(session:Session,id_cuenta:int)->Decimal:
     return req[0] if req else Decimal("0.00")
    
 
-def crear_movimiento(session:Session, mov:MovimientoCreate,usuario:str)-> int:
+def crear_movimiento(session:Session, mov:MovimientoCreate,usuario:Optional[str] = None,usuario_rol: Optional[str] = None,)-> int:
     
     verificar_cuenta_activa(session, mov.id_cuenta_bancaria)
     
@@ -66,8 +66,12 @@ def crear_movimiento(session:Session, mov:MovimientoCreate,usuario:str)-> int:
             )
         ).first()
         if existente:
-            return  existente[0]
-    movi = MovimientoBancario(**mov.dict(),usuario_registro=usuario)
+            return  existente
+        display_user = (
+            f"{usuario} ({usuario_rol})" if usuario and usuario_rol else (usuario or "system")
+        )
+        
+    movi = MovimientoBancario(**mov.model_dump(),usuario_registro=(display_user[:60] if display_user else "system"))
     
     try: 
         session.add(movi)
@@ -78,9 +82,11 @@ def crear_movimiento(session:Session, mov:MovimientoCreate,usuario:str)-> int:
         session.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Movimiento duplicado o datos invalidos ") from e
     
-def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:str)-> str:
+def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:Optional[str] = None,usuario_rol: Optional[str] = None)-> str:
+    
     if trans.origen == trans.destino:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cuenta origen y destino no pueden ser iguales")
+    
     #origen
     verificar_cuenta_activa(session, trans.origen)
     #destino
@@ -94,6 +100,11 @@ def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:str)
     
     id_trans = str(uuid4())
     
+    display_user = (
+        f"{usuario} ({usuario_rol})" if usuario and usuario_rol
+        else (usuario or  "system")
+    )
+    
     try: 
         #transaccion atomica
         
@@ -106,7 +117,9 @@ def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:str)
                 referencia=trans.referencia,
                 descripcion=f"Transferencia a cuenta ID {trans.destino}",
                 transferencia_id=id_trans,
-                usuario_registro=usuario
+                
+                usuario_registro=(usuario[:60] if usuario else None),
+                usuario_registro_rol=(usuario_rol[:60] if usuario_rol else None),
             )
             session.add(salida)
             #se deposita a la cuenta destino 
@@ -117,7 +130,9 @@ def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:str)
                 referencia=trans.referencia,
                 descripcion=f"Transferencia de cuenta ID {trans.origen}",
                 transferencia_id=id_trans,
-                usuario_registro=usuario
+                
+                usuario_registro=(usuario[:60] if usuario else None),
+                usuario_registro_rol=(usuario_rol[:60] if usuario_rol else None),
             )
             session.add(entrada)
             
@@ -126,7 +141,7 @@ def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:str)
         
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Error al crear transferencia") from e
     
-def pago_a_proveedor(session:Session,pago:PagoProveedorCreate,usuario:str)-> int:
+def pago_a_proveedor(session:Session,pago:PagoProveedorCreate,usuario:str, usuario_rol: str)-> int:
     
     verificar_cuenta_activa(session, pago.id_cuenta_bancaria)
     
@@ -174,7 +189,8 @@ def pago_a_proveedor(session:Session,pago:PagoProveedorCreate,usuario:str)-> int
                 monto=pago.monto_pagado,
                 referencia=f"Pago a proveedor {pago.proveedor_id} - Fact: {pago.factura_id or 'S/F'}",
                 descripcion=pago.observacion,
-                usuario_registro=usuario
+                usuario_registro=usuario,
+                 usuario_registro_rol=usuario_rol,
             )
             
             session.add(mov)

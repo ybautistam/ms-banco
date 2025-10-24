@@ -1,4 +1,4 @@
-from fastapi import APIRouter,Depends, HTTPException, status
+from fastapi import APIRouter,Depends, HTTPException, status,Query
 from sqlmodel import Session,select
 from decimal import Decimal
 from typing import Optional, Literal
@@ -113,33 +113,33 @@ def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> 
     return {"id_cuenta": id_cuenta, "saldo": str(saldo)}
     
 @banco.post("/movimientos", status_code=status.HTTP_201_CREATED)
-def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_session), usuario: AuthUsuario = Depends(require_scopes("Administrador")),)-> dict:
+def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_session), usuario_nombre:Optional[str] = Query(None, alias="usuario_nombre"),usuario_rol: Optional[str] = Query(None, alias="usuario_rol") ,)-> dict:
     """
     Crear un movimiento bancario (depósito, retiro, transferencia, cheque).
     """
-    user_id = usuario.sub or usuario.email or "system"
-    id_mov = crear_movimiento(session, mov,usuario=user_id)
-    return {"id_movimiento": id_mov, "detalle": str(mov)}
+    
+    id_mov = crear_movimiento(session, mov,usuario=usuario_nombre,usuario_rol=usuario_rol)
+    return {"id_movimiento": id_mov, "detalle": mov.model_dump()}
 
 @banco.post("/transferencias", status_code=status.HTTP_201_CREATED)
-def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(require_scopes("Administrador")),):
+def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(get_session),usuario_nombre: Optional[str] = Query(None, alias="usuario_nombre"),usuario_rol: Optional[str] = Query(None, alias="usuario_rol")):
     """
     Realizar una transferencia interna entre dos cuentas bancarias.
     """
-    user_id = usuario.sub or usuario.email or "system"
-    id_trans = transferencia_interna(session, trans,usuario=user_id)
+    
+    id_trans = transferencia_interna(session, trans,usuario=usuario_nombre,usuario_rol=usuario_rol)
     return {"id_transferencia": id_trans, "detalle": trans}
 
 @banco.post("/pagos_proveedor", status_code=status.HTTP_201_CREATED)
-def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(require_scopes("Administrador")),)-> dict:
+def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(get_session),usuario_nombre: Optional[str] = Query(None, alias="usuario_nombre"),usuario_rol: Optional[str]    = Query(None, alias="usuario_rol"),)-> dict:
     """
     Registrar un pago a un proveedor, asociado opcionalmente a una factura.
     """
-    user_id = usuario.sub or usuario.email or "system"
-    id_pago = pago_a_proveedor(session, pago,usuario=user_id)
+    user_nombre = usuario_nombre or "system"
+    id_pago = pago_a_proveedor(session, pago,usuario=user_nombre,usuario_rol=usuario_rol)
     return {"id_pago": id_pago, "detalle": pago}
 
-@banco.get("/proveedor/{proveedor_id}/factura_abiertas",dependencies=[Depends(require_scopes("Administrador"))])
+@banco.get("/proveedor/{proveedor_id}/factura_abiertas")
 def obtener_facturas_abiertas(proveedor_id:int, limite:int=20, session:Session=Depends(get_session))-> list:
     """
     Obtener una lista de facturas abiertas (pendientes o parciales) para ver a que proveedor le debemos .

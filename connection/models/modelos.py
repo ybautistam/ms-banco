@@ -114,6 +114,7 @@ class MovimientoBancario(SQLModel, table=True):
     referencia_externa: Optional[str] = Field(default=None, max_length=60)
     transferencia_id: Optional[str] = Field(default=None, sa_column=Column(SAUUID(as_uuid=False)))
     usuario_registro: Optional[str] = Field(default=None, max_length=60)
+    usuario_registro_rol: Optional[str] = Field(default=None, max_length=60)
     
     conciliado: bool = Field(
         default=False,
