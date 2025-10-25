@@ -20,12 +20,12 @@ banco = APIRouter(
 )
 
 # -------- Bancos --------
-@banco.post("", status_code=201, dependencies=[Depends(get_current_user)])
+@banco.post("", status_code=201, dependencies=[])
 def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
     banco_id = crear_banco(session, dto.nombre_banco, dto.direccion, dto.telefono)
     return {"id_banco": banco_id}
 
-@banco.get("", dependencies=[Depends(get_current_user)])
+@banco.get("", dependencies=[])
 def api_listar_bancos(
     estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO",
     session: Session = Depends(get_session),
@@ -33,7 +33,7 @@ def api_listar_bancos(
     data = listar_bancos(session, estado)
     return {"items": data}
 
-@banco.patch("/{id_banco}/estado", dependencies=[Depends(get_current_user)])
+@banco.patch("/{id_banco}/estado", dependencies=[])
 def api_cambiar_estado_banco(
     id_banco: int,
     nuevo_estado: Literal["ACTIVO", "INACTIVO"],
@@ -47,11 +47,11 @@ def api_cambiar_estado_banco(
     return {"ok": True, "estado": "ACTIVO" if b.activo else "INACTIVO"}
 
 # -------- Catálogos / Cuentas --------
-@banco.get("/catalogos", dependencies=[Depends(get_current_user)])
+@banco.get("/catalogos", dependencies=[])
 def catalogos(session: Session = Depends(get_session)):
     return mostrar_catalogo(session)
 
-@banco.post("/cuentas", status_code=201, dependencies=[Depends(get_current_user)])
+@banco.post("/cuentas", status_code=201, dependencies=[])
 def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session)):
     if not session.get(Banco, dto.id_banco):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Banco no existe")
@@ -67,7 +67,7 @@ def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session))
     )
     return {"id_cuenta_bancaria": cuenta_id}
 
-@banco.get("/listcuentas", dependencies=[Depends(get_current_user)])
+@banco.get("/listcuentas", dependencies=[])
 def api_listar_cuentas(
     banco_id: Optional[int] = None,
     moneda_id: Optional[int] = None,
@@ -84,7 +84,7 @@ def api_listar_cuentas(
     rows = session.exec(q.order_by(CuentaBancaria.id_cuenta_bancaria.desc())).all()
     return {"items": [r.model_dump() for r in rows]}
 
-@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[Depends(get_current_user)])
+@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[])
 def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Session = Depends(get_session)):
     if nuevo_estado not in ("ACTIVA", "INACTIVA", "CERRADA"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Estado inválido")
@@ -96,7 +96,7 @@ def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Sessio
     return {"ok": True, "estado": c.estado}
 
 # -------- Saldos / Movs / Transfer / Pagos --------
-@banco.get("/saldos/{id_cuenta}", dependencies=[Depends(get_current_user)])
+@banco.get("/saldos/{id_cuenta}", dependencies=[])
 def obtener_saldo_cuenta(id_cuenta: int, session: Session = Depends(get_session)) -> dict:
     saldo = obtener_saldo(session, id_cuenta)
     return {"id_cuenta": id_cuenta, "saldo": str(saldo)}

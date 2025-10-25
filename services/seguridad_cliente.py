@@ -7,7 +7,7 @@ from connection.models.modelos import AuthUsuario
 import logging
 #log = logging.getLogger("bancos.auth")
 
-JWT_SECRET = os.getenv("JWT_SECRET")  
+JWT_SECRET = os.getenv("JWT_SECRET","racsh5cYrXtPacAK1nnHNgHsduL9ALQdp0wAOXKItcd7Iev16dFHdr2A5TA_vQIC0eKQQi7uDoaH0WOi5xZW-w")  
 JWT_ALG = os.getenv("JWT_ALG","HS256")
 
 
