@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends,HTTPException, status
 from sqlmodel import Session
 from sqlalchemy import text
 from connection.data.db import get_session
-from services.seguridad_cliente import require_scopes
+from services.seguridad_cliente import require_roles
 from connection.models.modelos import EmitirCheque, AnularCheque
 from function.fcheques import emitir_cheque, anular_cheque
 

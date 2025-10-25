@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends,HTTPException,status
 from sqlmodel import Session
 from typing import Optional
 from connection.data.db import get_session
-from services.seguridad_cliente import require_scopes
+from services.seguridad_cliente import require_roles
 from connection.models.modelos import ConciliacionCreate
 from function.fconsiliaciones import crear_conciliacion,listar_conciliaciones,listar_partidas_pendientes,_seguimiento_bandera
 from function.fbancos import verificar_cuenta_activa

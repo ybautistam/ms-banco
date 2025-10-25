@@ -4,7 +4,7 @@ from sqlmodel import Session
 from connection.data.db import get_session
 from fastapi import APIRouter, Depends
 from function.freportes import historial_pagos, facturas_pagadas_por_fecha
-from services.seguridad_cliente import require_scopes
+from services.seguridad_cliente import require_roles
 
 reportes = APIRouter(
         prefix="/admin/reportes",
