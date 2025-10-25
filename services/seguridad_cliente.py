@@ -8,13 +8,14 @@ import logging
 #log = logging.getLogger("bancos.auth")
 
 JWT_SECRET = os.getenv("JWT_SECRET")  
-JWT_ALG = os.getenv("JWT_ALG")
+JWT_ALG = os.getenv("JWT_ALG","HS256")
 
 
 def get_current_user(authorization: str = Header(..., alias="Authorization")) -> AuthUsuario:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalidacion auth header")
-    token = authorization.split(" ", 1)[1]
+    
+    scheme, _, token = (authorization or "").partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header")
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
         return AuthUsuario(
