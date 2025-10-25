@@ -294,4 +294,4 @@ class AuthUsuario(BaseModel):
     sub: str 
     nombre: str | None = None
     rol: str | None = None
-    scopes: List[str] = []
+    

@@ -6,7 +6,7 @@ from connection.data.db import get_session
 from connection.models.modelos import(MovimientoCreate, TransferenciaCreate, PagoProveedorCreate,BancoCreate,CuentaCreate,TipoMoneda,Banco,TipoCuenta,CuentaBancaria,AuthUsuario)
 from function.fbancos import(crear_movimiento, transferencia_interna, obtener_saldo,pago_a_proveedor,facturas_abiertas_por_proveedor)
 from function.fbanco_cuentas import listar_bancos,crear_banco,crear_cuenta,mostrar_catalogo
-from services.seguridad_cliente import require_scopes,get_current_user
+from services.seguridad_cliente import require_roles,get_current_user
 
 banco = APIRouter(
         prefix="/admin/bancos",
@@ -15,7 +15,7 @@ banco = APIRouter(
             500: {"description": "Internal Server Error"},
         },
         tags=["bancos"],
-        dependencies=[Depends(require_scopes("Administrador"))],
+        dependencies=[Depends(require_roles("Administrador"))],
     )
 
 #dependencies=[Depends(require_scopes("Administrador"))]

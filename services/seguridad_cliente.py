@@ -23,14 +23,12 @@ def get_current_user(authorization: str = Header(..., alias="Authorization")) ->
             rol=payload.get("rol"),
         )
     except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail=" token invalido")
+        raise HTTPException(status_code=401, detail=" token invalido bancos")
 
-def require_scopes(*needed: str):
+def require_roles(*roles: str):
     def _dep(usuario: AuthUsuario = Depends(get_current_user)) -> AuthUsuario:
-        if needed:
-            
-            if not any(s in (usuario.scopes or []) for s in needed):
-                raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Permisos insuficientes")
+        if roles and (usuario.rol not in roles):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Rol insuficiente")
         return usuario
     return _dep
 
