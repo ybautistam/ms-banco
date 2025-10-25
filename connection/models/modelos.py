@@ -291,6 +291,7 @@ class FacturaAnular(BaseModel):
     
 #--------------------------
 class AuthUsuario(BaseModel):
-    sub: str | None = None
-    email: str | None = None
-    scopes: list[str] = []
+    sub: str 
+    nombre: str | None = None
+    rol: str | None = None
+    scopes: List[str] = []

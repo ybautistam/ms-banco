@@ -67,11 +67,16 @@ def crear_movimiento(session:Session, mov:MovimientoCreate,usuario:Optional[str]
         ).first()
         if existente:
             return  existente
-        display_user = (
-            f"{usuario} ({usuario_rol})" if usuario and usuario_rol else (usuario or "system")
-        )
         
-    movi = MovimientoBancario(**mov.model_dump(),usuario_registro=(display_user[:60] if display_user else "system"))
+    display_user = (
+        
+        f"{usuario} ({usuario_rol})" if usuario and usuario_rol else (usuario or "system")
+    )
+        
+    movi = MovimientoBancario(
+        **mov.model_dump(),
+        usuario_registro=(display_user[:60] if display_user else "system")
+    )
     
     try: 
         session.add(movi)
@@ -131,8 +136,8 @@ def transferencia_interna(session:Session,trans:TransferenciaCreate,usuario:Opti
                 descripcion=f"Transferencia de cuenta ID {trans.origen}",
                 transferencia_id=id_trans,
                 
-                usuario_registro=(usuario[:60] if usuario else None),
-                usuario_registro_rol=(usuario_rol[:60] if usuario_rol else None),
+                usuario_registro=(display_user[:60] if display_user else None),
+                usuario_registro_rol=(display_user[:60] if display_user else None),
             )
             session.add(entrada)
             

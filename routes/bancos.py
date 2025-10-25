@@ -6,7 +6,7 @@ from connection.data.db import get_session
 from connection.models.modelos import(MovimientoCreate, TransferenciaCreate, PagoProveedorCreate,BancoCreate,CuentaCreate,TipoMoneda,Banco,TipoCuenta,CuentaBancaria,AuthUsuario)
 from function.fbancos import(crear_movimiento, transferencia_interna, obtener_saldo,pago_a_proveedor,facturas_abiertas_por_proveedor)
 from function.fbanco_cuentas import listar_bancos,crear_banco,crear_cuenta,mostrar_catalogo
-from services.seguridad_cliente import require_scopes
+from services.seguridad_cliente import require_scopes,get_current_user
 
 banco = APIRouter(
         prefix="/admin/bancos",
@@ -14,18 +14,19 @@ banco = APIRouter(
             404: {"description": "Not found"},
             500: {"description": "Internal Server Error"},
         },
-        tags=["bancos"] 
+        tags=["bancos"],
+        dependencies=[Depends(require_scopes("Administrador"))],
     )
 
 #dependencies=[Depends(require_scopes("Administrador"))]
 
-@banco.post("", status_code=201, dependencies=[])
+@banco.post("", status_code=201)
 def api_crear_banco(dto: BancoCreate, session: Session = Depends(get_session)):
     banco_id = crear_banco(session, dto.nombre_banco, dto.direccion, dto.telefono)
     return {"id_banco": banco_id}
 
 
-@banco.get("", dependencies=[])
+@banco.get("")
 def api_listar_bancos(estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO",session: Session = Depends(get_session)):
     data  = listar_bancos(session,estado)
     
@@ -33,7 +34,7 @@ def api_listar_bancos(estado: Optional[Literal["ACTIVO", "INACTIVO"]] = "ACTIVO"
 
     
 #----- agregacion de funcion cambiar estado banco -------
-@banco.patch("/{id_banco}/estado", dependencies=[])
+@banco.patch("/{id_banco}/estado")
 def api_cambiar_estado_banco(
     id_banco: int,
     nuevo_estado: Literal["ACTIVO", "INACTIVO"],
@@ -50,11 +51,11 @@ def api_cambiar_estado_banco(
 #----------------------------------------------------------
 
 #---------------------cargar catalogos de bancos , moneda y tipo  ------------------
-@banco.get("/catalogos", dependencies=[])
+@banco.get("/catalogos")
 def catalogos(session: Session = Depends(get_session)):
     return mostrar_catalogo(session)
 
-@banco.post("/cuentas", status_code=201, dependencies=[])
+@banco.post("/cuentas", status_code=201)
 def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session)):
     
     if not session.get(Banco, dto.id_banco):
@@ -74,7 +75,7 @@ def api_crear_cuenta(dto: CuentaCreate, session: Session = Depends(get_session))
     )
     return {"id_cuenta_bancaria": cuenta_id}
 
-@banco.get("/listcuentas", dependencies=[])
+@banco.get("/listcuentas")
 def api_listar_cuentas(
     banco_id: Optional[int] = None,
     moneda_id: Optional[int] = None,
@@ -90,9 +91,9 @@ def api_listar_cuentas(
     if estado is not None:
         q = q.where(CuentaBancaria.estado == estado)
     rows = session.exec(q.order_by(CuentaBancaria.id_cuenta_bancaria.desc())).all()
-    return {"items": [r.dict() for r in rows]}
+    return {"items": [r.model_dump() for r in rows]}
 
-@banco.patch("/cuentas/{id_cuenta}/estado", dependencies=[])
+@banco.patch("/cuentas/{id_cuenta}/estado")
 def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Session = Depends(get_session)):
     if nuevo_estado not in ("ACTIVA","INACTIVA","CERRADA"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Estado inválido")
@@ -104,8 +105,8 @@ def api_cambiar_estado_cuenta(id_cuenta: int, nuevo_estado: str, session: Sessio
     return {"ok": True, "estado": c.estado}
 
 #----------------------------------- saldo,movimiento trasferencias  ---------------------------------#
-@banco.get("/saldos/{id_cuenta}",dependencies=[])
-def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> Decimal:
+@banco.get("/saldos/{id_cuenta}")
+def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> dict:
     """
     Obtener el saldo actual de una cuenta bancaria.
     """
@@ -113,30 +114,30 @@ def obtener_saldo_cuenta(id_cuenta:int, session:Session=Depends(get_session))-> 
     return {"id_cuenta": id_cuenta, "saldo": str(saldo)}
     
 @banco.post("/movimientos", status_code=status.HTTP_201_CREATED)
-def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_session), usuario_nombre:Optional[str] = Query(None, alias="usuario_nombre"),usuario_rol: Optional[str] = Query(None, alias="usuario_rol") ,)-> dict:
+def crear_movimiento_bancario(mov:MovimientoCreate, session:Session=Depends(get_session), usuario: AuthUsuario = Depends(get_current_user))-> dict:
     """
     Crear un movimiento bancario (depósito, retiro, transferencia, cheque).
     """
     
-    id_mov = crear_movimiento(session, mov,usuario=usuario_nombre,usuario_rol=usuario_rol)
+    id_mov = crear_movimiento(session, mov,usuario=usuario.nombre,usuario_rol=usuario.rol)
     return {"id_movimiento": id_mov, "detalle": mov.model_dump()}
 
 @banco.post("/transferencias", status_code=status.HTTP_201_CREATED)
-def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(get_session),usuario_nombre: Optional[str] = Query(None, alias="usuario_nombre"),usuario_rol: Optional[str] = Query(None, alias="usuario_rol")):
+def realizar_transferencia(trans:TransferenciaCreate, session:Session=Depends(get_session),usuario: AuthUsuario = Depends(get_current_user)):
     """
     Realizar una transferencia interna entre dos cuentas bancarias.
     """
     
-    id_trans = transferencia_interna(session, trans,usuario=usuario_nombre,usuario_rol=usuario_rol)
+    id_trans = transferencia_interna(session, trans,usuario=usuario.nombre,usuario_rol=usuario.rol)
     return {"id_transferencia": id_trans, "detalle": trans}
 
 @banco.post("/pagos_proveedor", status_code=status.HTTP_201_CREATED)
-def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(get_session),usuario_nombre: Optional[str] = Query(None, alias="usuario_nombre"),usuario_rol: Optional[str]    = Query(None, alias="usuario_rol"),)-> dict:
+def registrar_pago_proveedor(pago:PagoProveedorCreate, session:Session=Depends(get_session),usuario:AuthUsuario = Depends(get_current_user))-> dict:
     """
     Registrar un pago a un proveedor, asociado opcionalmente a una factura.
     """
-    user_nombre = usuario_nombre or "system"
-    id_pago = pago_a_proveedor(session, pago,usuario=user_nombre,usuario_rol=usuario_rol)
+    user_nombre = usuario.nombre or "system"
+    id_pago = pago_a_proveedor(session, pago,usuario=user_nombre,usuario_rol=usuario.rol)
     return {"id_pago": id_pago, "detalle": pago}
 
 @banco.get("/proveedor/{proveedor_id}/factura_abiertas")
